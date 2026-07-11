@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus } from 'lucide-react';
+import { Mail, UserPlus } from 'lucide-react';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -9,6 +9,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [registered, setRegistered] = useState(false);
   const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -23,13 +24,36 @@ export default function Register() {
     setSubmitting(true);
     try {
       await register(name, email, password);
-      navigate('/', { replace: true });
+      setRegistered(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (registered) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-md text-center space-y-6">
+          <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto">
+            <Mail size={28} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-bold uppercase tracking-tight">Check Your Email</h1>
+          <p className="text-gray-500 text-sm leading-relaxed">
+            We've sent a verification link to <strong className="text-black">{email}</strong>.
+            Please check your inbox and click the link to verify your account.
+          </p>
+          <p className="text-[10px] uppercase tracking-wider text-gray-400">
+            Didn't receive the email? Check your spam folder.
+          </p>
+          <Link to="/" className="inline-block bg-black text-white px-8 py-3 text-xs uppercase tracking-wider font-bold hover:bg-zinc-900 transition-colors">
+            Continue to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">

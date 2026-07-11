@@ -1,5 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const User = require('../models/User');
+const sendMail = require('../utils/sendMail');
 
 const createOrder = async (req, res) => {
   try {
@@ -7,6 +9,10 @@ const createOrder = async (req, res) => {
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: 'No order items' });
+    }
+
+    if (!req.user.isVerified) {
+      return res.status(403).json({ message: 'Please verify your email before placing an order' });
     }
 
     let totalAmount = 0;
@@ -49,6 +55,16 @@ const createOrder = async (req, res) => {
       shippingAddress,
       totalAmount,
     });
+
+    const user = await User.findById(req.user._id);
+    if (user) {
+      const itemsList = orderItems.map(i => `${i.name} x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`).join('\n');
+      sendMail(
+        user.email,
+        `Order Confirmed — #${order._id.toString().slice(-8)}`,
+        `Hi ${user.name},\n\nYour order has been placed successfully!\n\nOrder #${order._id.toString().slice(-8)}\n\n${itemsList}\n\nTotal: $${totalAmount.toFixed(2)}\nShipping to: ${shippingAddress.firstName} ${shippingAddress.lastName}, ${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.country}\n\nThank you for shopping with Wear & Gear!`
+      ).catch(err => console.error(`[MAIL FAILED] to ${user.email} — order confirmation:`, err.message));
+    }
 
     res.status(201).json(order);
   } catch (error) {

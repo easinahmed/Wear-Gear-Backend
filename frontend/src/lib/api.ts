@@ -30,10 +30,17 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-  const data = await response.json();
+  const text = await response.text();
+
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(text.includes('<!DOCTYPE') ? 'Server returned HTML — backend may be down or CORS misconfigured' : text.slice(0, 100));
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
+    throw new Error((data as { message?: string }).message || 'Something went wrong');
   }
 
   return data as T;

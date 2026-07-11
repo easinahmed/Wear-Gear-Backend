@@ -10,7 +10,10 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
+import VerifyEmail from './pages/VerifyEmail';
 import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
@@ -52,6 +55,8 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
             <Route path="/register" element={<MainLayout><Register /></MainLayout>} />
+            <Route path="/forgot-password" element={<MainLayout><ForgotPassword /></MainLayout>} />
+            <Route path="/reset-password/:token" element={<MainLayout><ResetPassword /></MainLayout>} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
@@ -69,6 +74,7 @@ export default function App() {
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<ProtectedRoute redirectAdminTo="/admin/dashboard"><Checkout /></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute redirectAdminTo="/admin/dashboard"><Dashboard /></ProtectedRoute>} />
+                  <Route path="/verify-email/:token" element={<VerifyEmail />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </MainLayout>

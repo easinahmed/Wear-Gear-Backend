@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
-import { Package, User, MapPin, Phone, Mail, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, User, MapPin, Phone, Mail, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { OrderCardSkeleton } from '../components/Skeleton';
 
 interface OrderItem {
@@ -97,6 +97,18 @@ export default function Dashboard() {
         <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-tight">My Account</h1>
         <p className="text-gray-500 text-sm mt-2">Welcome back, {user?.name}</p>
       </div>
+
+      {user && !user.isVerified && (
+        <div className="mb-8 bg-yellow-50 border border-yellow-200 px-4 md:px-6 py-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-yellow-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs uppercase tracking-wider font-bold text-yellow-800">Email not verified</p>
+            <p className="text-[11px] text-yellow-700 mt-1">
+              Please check your inbox and click the verification link to activate your account.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Profile Section */}

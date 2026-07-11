@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { motion } from 'motion/react';
-import { Check } from 'lucide-react';
+import { Check, AlertTriangle } from 'lucide-react';
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useCart();
@@ -93,6 +93,18 @@ export default function Checkout() {
         <div className="space-y-12">
           <h1 className="section-title">Shipping Details</h1>
 
+          {user && !user.isVerified && (
+            <div className="bg-red-50 border border-red-200 px-4 py-3 flex items-start gap-3">
+              <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[11px] text-red-700 font-bold uppercase tracking-wider">Email not verified</p>
+                <p className="text-[11px] text-red-600 mt-1">
+                  You must verify your email before placing an order. Check your inbox for the verification link.
+                </p>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-xs uppercase tracking-wider px-4 py-3">{error}</div>
           )}
@@ -135,13 +147,13 @@ export default function Checkout() {
             </div>
 
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={user?.isVerified ? { scale: 1.02 } : undefined}
+              whileTap={user?.isVerified ? { scale: 0.98 } : undefined}
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !user?.isVerified}
               className="w-full btn-primary py-5 text-base cursor-pointer disabled:opacity-50"
             >
-              {submitting ? 'Processing...' : `Confirm Order • $${cartTotal.toFixed(2)}`}
+              {!user?.isVerified ? 'Verify Email to Checkout' : submitting ? 'Processing...' : `Confirm Order • $${cartTotal.toFixed(2)}`}
             </motion.button>
           </form>
         </div>

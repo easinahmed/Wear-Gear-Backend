@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   role: 'user' | 'admin';
+  isVerified?: boolean;
   phone?: string;
   address?: {
     street?: string;
@@ -58,25 +59,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUser]);
 
   const login = async (email: string, password: string) => {
-    const data = await api.post<{ _id: string; name: string; email: string; role: 'user' | 'admin'; token: string }>(
+    const data = await api.post<{ _id: string; name: string; email: string; role: 'user' | 'admin'; isVerified: boolean; token: string }>(
       '/auth/login',
       { email, password }
     );
     localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.name, email: data.email, role: data.role }));
+    localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.name, email: data.email, role: data.role, isVerified: data.isVerified }));
     setToken(data.token);
-    setUser({ _id: data._id, name: data.name, email: data.email, role: data.role });
+    setUser({ _id: data._id, name: data.name, email: data.email, role: data.role, isVerified: data.isVerified });
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const data = await api.post<{ _id: string; name: string; email: string; role: 'user' | 'admin'; token: string }>(
+    const data = await api.post<{ _id: string; name: string; email: string; role: 'user' | 'admin'; isVerified: boolean; token: string }>(
       '/auth/register',
       { name, email, password }
     );
     localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.name, email: data.email, role: data.role }));
+    localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.name, email: data.email, role: data.role, isVerified: data.isVerified }));
     setToken(data.token);
-    setUser({ _id: data._id, name: data.name, email: data.email, role: data.role });
+    setUser({ _id: data._id, name: data.name, email: data.email, role: data.role, isVerified: data.isVerified });
   };
 
   const logout = () => {
