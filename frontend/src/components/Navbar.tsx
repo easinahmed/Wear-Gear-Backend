@@ -1,18 +1,42 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, createSearchParams } from 'react-router-dom';
 import { ShoppingCart, Search, Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
+import { api } from '../lib/api';
 
+interface ApiCategory {
+  _id: string;
+  name: string;
+  image?: string;
+  description?: string;
+}
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const { cartCount } = useCart();
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const navigate = useNavigate();
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleSearch = (e: React.FormEvent | React.KeyboardEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) {
+      navigate({ pathname: '/shop', search: createSearchParams({ search: q }).toString() });
+      setIsMenuOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    api.get<ApiCategory[]>('/categories')
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -23,6 +47,19 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const navLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Shop All', path: '/shop' },
+    ...categories.map(cat => ({
+      name: cat.name,
+      path: `/shop?category=${cat.name.toLowerCase()}`,
+      dropdown: [
+        { name: `All ${cat.name}`, path: `/shop?category=${cat.name.toLowerCase()}` },
+        ...(cat.description ? [{ name: cat.description, path: `/shop?category=${cat.name.toLowerCase()}` }] : []),
+      ],
+    })),
+  ];
 
   return (
     <header className="w-full bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
@@ -45,14 +82,18 @@ export default function Navbar() {
         </Link>
 
         {/* Search Bar (Centered) */}
-        <div className="hidden md:flex flex-1 max-w-2xl relative group">
+        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-2xl relative group">
           <input 
             type="text" 
             placeholder="Search products..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
             className="w-full bg-gray-50 border border-gray-200 rounded-full py-1.5 px-6 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all placeholder:text-gray-400"
           />
-          <Search size={20} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors" />
-        </div>
+          <button type="submit" className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors">
+            <Search size={20} />
+          </button>
+        </form>
 
         {/* Icons Section */}
         <div className="flex items-center space-x-4 md:space-x-6">
@@ -77,6 +118,14 @@ export default function Navbar() {
                       <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
                     </div>
                     <div className="py-1">
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-50"
+                      >
+                        <User size={14} />
+                        My Dashboard
+                      </Link>
                       {isAdmin && (
                         <Link
                           to="/admin/dashboard"
@@ -125,73 +174,26 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Search - Visible only on mobile */}
-      <div className="md:hidden px-4 pb-4">
+      <form onSubmit={handleSearch} className="md:hidden px-4 pb-4">
         <div className="relative">
           <input 
             type="text" 
             placeholder="Search..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
             className="w-full bg-gray-50 border border-gray-200 rounded-full py-2 px-5 text-sm focus:outline-none"
           />
-          <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <Search size={18} />
+          </button>
         </div>
-      </div>
+      </form>
 
       {/* Bottom Tier: Navigation Links (Desktop Only) */}
       <nav className="hidden md:block border-t border-gray-100 bg-white">
         <div className="max-w-[1440px] mx-auto px-4">
           <ul className="flex items-center justify-center space-x-10 py-1.5">
-            {[
-              { 
-                name: 'Winter Collection', 
-                path: '/shop?category=hoodie',
-                dropdown: [
-                  { name: 'Hoodies', path: '/shop?category=hoodie' },
-                  { name: 'Sweatshirts', path: '/shop?category=sweatshirt' },
-                  { name: 'Winter Jackets', path: '/shop' },
-                  { name: 'Full Sleeve T-Shirts', path: '/shop' }
-                ]
-              },
-              { 
-                name: 'Men', 
-                path: '/shop',
-                dropdown: [
-                  { name: 'Panjabi', path: '/shop?category=panjabi' },
-                  { name: 'Polo Shirts', path: '/shop?category=polo-shirt' },
-                  { name: 'Half Shirts', path: '/shop?category=half-shirt' },
-                  { name: 'Modern Fit', path: '/shop' }
-                ]
-              },
-              { 
-                name: 'Sweatshirt', 
-                path: '/shop?category=sweatshirt',
-                dropdown: [
-                  { name: 'Basic Fleece', path: '/shop?category=sweatshirt' },
-                  { name: 'Printed Sweatshirts', path: '/shop?category=sweatshirt' },
-                  { name: 'Oversized Fit', path: '/shop?category=sweatshirt' },
-                  { name: 'Heritage Collection', path: '/shop?category=sweatshirt' }
-                ]
-              },
-              { 
-                name: 'Hoodie', 
-                path: '/shop?category=hoodie',
-                dropdown: [
-                  { name: 'Premium Arctic', path: '/shop?category=hoodie' },
-                  { name: 'Street Hoodies', path: '/shop?category=hoodie' },
-                  { name: 'Zip-up Style', path: '/shop?category=hoodie' },
-                  { name: 'Light Weight', path: '/shop?category=hoodie' }
-                ]
-              },
-              { 
-                name: 'Trouser', 
-                path: '/shop?category=trouser',
-                dropdown: [
-                  { name: 'Cargo Pants', path: '/shop?category=trouser' },
-                  { name: 'Tailored Chinos', path: '/shop?category=trouser' },
-                  { name: 'Denim Collection', path: '/shop?category=trouser' },
-                  { name: 'Urban Utility', path: '/shop?category=trouser' }
-                ]
-              }
-            ].map((link) => (
+            {navLinks.map((link) => (
               <li key={link.name} className="relative group/nav py-2">
                 <Link 
                   to={link.path}
@@ -201,23 +203,24 @@ export default function Navbar() {
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#e41e26] transition-all group-hover/nav:w-full" />
                 </Link>
 
-                {/* Dropdown Menu */}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 invisible group-hover/nav:visible opacity-0 group-hover/nav:opacity-100 transition-all duration-300 z-50">
-                  <div className="bg-white border border-gray-100 shadow-xl min-w-[200px] py-4 rounded-sm">
-                    <ul className="flex flex-col">
-                      {link.dropdown.map((subItem) => (
-                        <li key={subItem.name}>
-                          <Link 
-                            to={subItem.path}
-                            className="block px-6 py-2.5 text-[11px] font-bold text-gray-600 uppercase tracking-[0.1em] hover:bg-gray-50 hover:text-[#e41e26] transition-all"
-                          >
-                            {subItem.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+                {link.dropdown && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 invisible group-hover/nav:visible opacity-0 group-hover/nav:opacity-100 transition-all duration-300 z-50">
+                    <div className="bg-white border border-gray-100 shadow-xl min-w-[200px] py-4 rounded-sm">
+                      <ul className="flex flex-col">
+                        {link.dropdown.map((subItem) => (
+                          <li key={subItem.name}>
+                            <Link 
+                              to={subItem.path}
+                              className="block px-6 py-2.5 text-[11px] font-bold text-gray-600 uppercase tracking-[0.1em] hover:bg-gray-50 hover:text-[#e41e26] transition-all"
+                            >
+                              {subItem.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                </div>
+                )}
               </li>
             ))}
           </ul>
@@ -250,11 +253,20 @@ export default function Navbar() {
               <div className="flex flex-col space-y-6 overflow-y-auto pb-10">
                 <Link to="/" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">Home</Link>
                 <Link to="/shop" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">Shop All</Link>
-                <Link to="/shop?category=hoodie" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">Winter Collection</Link>
-                <Link to="/shop?category=sweatshirt" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">Sweatshirts</Link>
+                {categories.map(cat => (
+                  <Link
+                    key={cat._id}
+                    to={`/shop?category=${cat.name.toLowerCase()}`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="text-xl font-bold uppercase tracking-widest border-b pb-2"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
                 <Link to="/about" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">About Us</Link>
                 {isAuthenticated ? (
                   <>
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">My Dashboard</Link>
                     {isAdmin && (
                       <Link to="/admin/dashboard" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2 text-[#e41e26]">Admin</Link>
                     )}

@@ -2,11 +2,24 @@ const Product = require('../models/Product');
 
 const getProducts = async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, search, page = 1, limit = 20 } = req.query;
     const filter = {};
     if (category) filter.category = category.toLowerCase();
-    const products = await Product.find(filter).sort({ createdAt: -1 });
-    res.json(products);
+    if (search) filter.name = { $regex: search, $options: 'i' };
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const pageSize = parseInt(limit);
+
+    const [products, total] = await Promise.all([
+      Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(pageSize),
+      Product.countDocuments(filter),
+    ]);
+
+    res.json({
+      products,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / pageSize),
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

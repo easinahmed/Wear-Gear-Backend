@@ -1,21 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../lib/api';
 import { motion } from 'motion/react';
 import { Check } from 'lucide-react';
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useCart();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [isOrdered, setIsOrdered] = useState(false);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    firstName: '', lastName: '', email: '', address: '', city: '', country: '', postalCode: '',
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true });
+    }
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        firstName: user.name?.split(' ')[0] || '',
+        lastName: user.name?.split(' ').slice(1).join(' ') || '',
+        email: user.email || '',
+        address: user.address?.street || '',
+        city: user.address?.city || '',
+        country: user.address?.country || '',
+        postalCode: user.address?.postalCode || '',
+      }));
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsOrdered(true);
-    setTimeout(() => {
-      clearCart();
-      navigate('/');
-    }, 3000);
+    setError('');
+    setSubmitting(true);
+    try {
+      const items = cart.map(item => ({
+        ...(item._id ? { product: item._id } : {}),
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.images?.[0] || '',
+      }));
+
+      await api.post('/orders', {
+        items,
+        shippingAddress: form,
+      });
+
+      setIsOrdered(true);
+      setTimeout(() => {
+        clearCart();
+        navigate('/dashboard');
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Order failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (isOrdered) {
@@ -33,7 +80,7 @@ export default function Checkout() {
           <p className="text-gray-500 italic leading-relaxed">
             Your order has been received and is being processed by our artisans. An email confirmation has been sent to you.
           </p>
-          <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-gray-400 pt-8">Redirecting home...</p>
+          <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-gray-400 pt-8">Redirecting to dashboard...</p>
         </motion.div>
       </div>
     );
@@ -45,68 +92,73 @@ export default function Checkout() {
         {/* Checkout Form */}
         <div className="space-y-12">
           <h1 className="section-title">Shipping Details</h1>
-          
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs uppercase tracking-wider px-4 py-3">{error}</div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">First Name</label>
-                <input required type="text" className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
+                <input required type="text" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">Last Name</label>
-                <input required type="text" className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
+                <input required type="text" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">Email Address</label>
-              <input required type="email" className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
+              <input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
             </div>
 
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">Shipping Address</label>
-              <input required type="text" className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
+              <input required type="text" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">City</label>
-                <input required type="text" className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
+                <input required type="text" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">Country</label>
-                <input required type="text" className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
+                <input required type="text" value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">Postal Code</label>
-                <input required type="text" className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
+                <input required type="text" value={form.postalCode} onChange={e => setForm({ ...form, postalCode: e.target.value })} className="w-full border-b border-gray-200 py-3 focus:outline-none focus:border-black transition-colors" />
               </div>
             </div>
 
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              type="submit" 
-              className="w-full btn-primary py-5 text-base cursor-pointer"
+              type="submit"
+              disabled={submitting}
+              className="w-full btn-primary py-5 text-base cursor-pointer disabled:opacity-50"
             >
-              Confirm Order • ৳ {cartTotal.toFixed(2)}
+              {submitting ? 'Processing...' : `Confirm Order • $${cartTotal.toFixed(2)}`}
             </motion.button>
           </form>
         </div>
 
-        {/* List of items */}
+        {/* Order Summary */}
         <div className="space-y-8">
           <h2 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-400">Order Summary</h2>
           <div className="bg-gray-50 p-8 space-y-6 luxury-shadow">
             {cart.map((item) => (
               <div key={item.id} className="flex justify-between items-center text-sm font-medium">
                 <span className="text-gray-600 line-clamp-1">{item.name} <span className="text-gray-400 font-light lowercase">x{item.quantity}</span></span>
-                <span>৳ {(item.price * item.quantity).toFixed(2)}</span>
+                <span>${(item.price * item.quantity).toFixed(2)}</span>
               </div>
             ))}
             <div className="pt-6 border-t border-gray-200 flex justify-between items-end">
               <span className="font-bold uppercase tracking-widest text-xs">Total Due</span>
-              <span className="font-display text-2xl">৳ {cartTotal.toFixed(2)}</span>
+              <span className="font-display text-2xl">${cartTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>

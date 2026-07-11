@@ -10,6 +10,8 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminOrders from './pages/admin/Orders';
@@ -50,13 +52,13 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
             <Route path="/register" element={<MainLayout><Register /></MainLayout>} />
-            <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="categories" element={<AdminCategories />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="orders" element={<AdminOrders />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+              <Route path="categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
+              <Route path="users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+              <Route path="orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
             </Route>
             <Route path="*" element={
               <MainLayout>
@@ -65,8 +67,9 @@ export default function App() {
                   <Route path="/shop" element={<Shop />} />
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="*" element={<Home />} />
+                  <Route path="/checkout" element={<ProtectedRoute redirectAdminTo="/admin/dashboard"><Checkout /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute redirectAdminTo="/admin/dashboard"><Dashboard /></ProtectedRoute>} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </MainLayout>
             } />

@@ -30,6 +30,7 @@ const imageWhiteHoodieModel = 'https://images.unsplash.com/photo-1556821840-a197
 
 export interface Product {
   id: string;
+  _id?: string;
   name: string;
   price: number;
   originalPrice?: number;

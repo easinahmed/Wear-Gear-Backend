@@ -13,21 +13,34 @@ const createOrder = async (req, res) => {
     const orderItems = [];
 
     for (const item of items) {
-      const product = await Product.findById(item.product);
-      if (!product) {
-        return res.status(404).json({ message: `Product not found: ${item.product}` });
+      if (item.product) {
+        const product = await Product.findById(item.product);
+        if (!product) {
+          return res.status(404).json({ message: `Product not found: ${item.product}` });
+        }
+        if (product.stock < item.quantity) {
+          return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
+        }
+        orderItems.push({
+          product: product._id,
+          name: product.name,
+          price: product.price,
+          quantity: item.quantity,
+          image: product.images[0] || '',
+        });
+        totalAmount += product.price * item.quantity;
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: -item.quantity },
+        });
+      } else {
+        orderItems.push({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image || '',
+        });
+        totalAmount += item.price * item.quantity;
       }
-      if (product.stock < item.quantity) {
-        return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
-      }
-      orderItems.push({
-        product: product._id,
-        name: product.name,
-        price: product.price,
-        quantity: item.quantity,
-        image: product.images[0] || '',
-      });
-      totalAmount += product.price * item.quantity;
     }
 
     const order = await Order.create({
@@ -36,12 +49,6 @@ const createOrder = async (req, res) => {
       shippingAddress,
       totalAmount,
     });
-
-    for (const item of orderItems) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: -item.quantity },
-      });
-    }
 
     res.status(201).json(order);
   } catch (error) {
@@ -75,8 +82,16 @@ const getOrder = async (req, res) => {
 
 const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate('user', 'name email').sort({ createdAt: -1 });
-    res.json(orders);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+      Order.find().populate('user', 'name email').sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Order.countDocuments(),
+    ]);
+
+    res.json({ orders, total, page, pages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
