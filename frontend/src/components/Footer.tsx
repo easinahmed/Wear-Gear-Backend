@@ -1,6 +1,5 @@
 import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import brandLogo from '../assets/images/wear_gear_logo_1781729202575.jpg';
 
 export default function Footer() {
   return (
@@ -12,10 +11,9 @@ export default function Footer() {
           <div className="space-y-8">
             <div className="flex items-center space-x-2.5">
               <img 
-                src={brandLogo} 
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23fff' rx='4'/%3E%3Ctext x='16' y='21' text-anchor='middle' fill='%23000' font-size='14' font-weight='bold' font-family='Arial'%3EWG%3C/text%3E%3C/svg%3E" 
                 alt="Wear & Gear Logo" 
                 className="w-8 h-8 object-contain bg-white p-0.5 rounded-sm"
-                referrerPolicy="no-referrer"
               />
               <span className="text-xl font-black tracking-tighter text-white">WEAR & GEAR</span>
             </div>

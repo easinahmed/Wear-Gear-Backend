@@ -3,9 +3,9 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { CATEGORIES, PRODUCTS } from '../data/mockData';
 import ProductCard from '../components/ProductCard';
-import bannerNew from '../assets/images/male_model_fashion_banner_1781730926585.jpg';
-import midBannerLeft from '../assets/images/fashion_collection_banner_new_1781730657440.jpg';
-import midBannerRight from '../assets/images/kafi_fashion_collection_banner_1781728694588.jpg';
+const bannerNew = 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1920&h=800&fit=crop';
+const midBannerLeft = 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&h=600&fit=crop';
+const midBannerRight = 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&h=600&fit=crop';
 
 export default function Home() {
   const getProductsByCategory = (catId: string) => PRODUCTS.filter(p => p.category === catId).slice(0, 8);

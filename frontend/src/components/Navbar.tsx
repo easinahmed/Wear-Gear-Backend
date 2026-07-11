@@ -1,13 +1,28 @@
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Search, Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import brandLogo from '../assets/images/wear_gear_logo_1781729202575.jpg';
+
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { cartCount } = useCart();
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const navigate = useNavigate();
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header className="w-full bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
@@ -18,10 +33,9 @@ export default function Navbar() {
         <Link to="/" className="flex-shrink-0 flex items-center group">
           <div className="border border-gray-200 p-1.5 flex items-center space-x-2.5 bg-white hover:bg-gray-50 transition-colors">
             <img 
-              src={brandLogo} 
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000' rx='4'/%3E%3Ctext x='16' y='21' text-anchor='middle' fill='%23fff' font-size='14' font-weight='bold' font-family='Arial'%3EWG%3C/text%3E%3C/svg%3E" 
               alt="Wear & Gear Logo" 
               className="w-8 h-8 object-contain"
-              referrerPolicy="no-referrer"
             />
             <div className="flex flex-col -space-y-1">
               <span className="text-base font-black tracking-tighter text-black">WEAR & GEAR</span>
@@ -42,6 +56,57 @@ export default function Navbar() {
 
         {/* Icons Section */}
         <div className="flex items-center space-x-4 md:space-x-6">
+          {isAuthenticated ? (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="text-gray-700 hover:text-black transition-colors p-1"
+              >
+                <User size={22} strokeWidth={1.5} />
+              </button>
+              <AnimatePresence>
+                {isUserMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 shadow-xl z-50"
+                  >
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium truncate">{user?.name}</p>
+                      <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                    <div className="py-1">
+                      {isAdmin && (
+                        <Link
+                          to="/admin/dashboard"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-50"
+                        >
+                          <LayoutDashboard size={14} />
+                          Admin Dashboard
+                        </Link>
+                      )}
+                      <button
+                        onClick={() => { logout(); navigate('/'); setIsUserMenuOpen(false); }}
+                        className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-50 w-full"
+                      >
+                        <LogOut size={14} />
+                        Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="hidden md:inline-block text-[10px] uppercase tracking-[0.2em] font-bold text-black hover:text-gray-600 transition-colors"
+            >
+              Sign In
+            </Link>
+          )}
           <Link to="/cart" className="text-gray-700 hover:text-black transition-colors relative group">
             <ShoppingCart size={24} strokeWidth={1.5} />
             {cartCount > 0 && (
@@ -172,10 +237,9 @@ export default function Navbar() {
               <div className="flex justify-between items-center mb-4">
                 <div className="border border-gray-200 p-2 flex items-center space-x-2.5">
                   <img 
-                    src={brandLogo} 
+                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000' rx='4'/%3E%3Ctext x='16' y='21' text-anchor='middle' fill='%23fff' font-size='14' font-weight='bold' font-family='Arial'%3EWG%3C/text%3E%3C/svg%3E" 
                     alt="Wear & Gear Logo" 
                     className="w-8 h-8 object-contain"
-                    referrerPolicy="no-referrer"
                   />
                   <span className="text-base font-black tracking-tighter text-black">WEAR & GEAR</span>
                 </div>
@@ -189,6 +253,19 @@ export default function Navbar() {
                 <Link to="/shop?category=hoodie" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">Winter Collection</Link>
                 <Link to="/shop?category=sweatshirt" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">Sweatshirts</Link>
                 <Link to="/about" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">About Us</Link>
+                {isAuthenticated ? (
+                  <>
+                    {isAdmin && (
+                      <Link to="/admin/dashboard" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2 text-[#e41e26]">Admin</Link>
+                    )}
+                    <button onClick={() => { logout(); navigate('/'); setIsMenuOpen(false); }} className="text-left text-xl font-bold uppercase tracking-widest border-b pb-2">Sign Out</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">Sign In</Link>
+                    <Link to="/register" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold uppercase tracking-widest border-b pb-2">Create Account</Link>
+                  </>
+                )}
               </div>
               <div className="mt-auto pt-6 border-t font-bold text-center text-gray-400 text-xs uppercase tracking-[0.2em]">
                 Perfect Fit, Every Trend
