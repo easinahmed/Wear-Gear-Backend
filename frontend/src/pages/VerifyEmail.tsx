@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Check, X, Loader } from 'lucide-react';
 
 export default function VerifyEmail() {
   const { token } = useParams();
+  const navigate = useNavigate();
   const { refreshUser } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
@@ -16,17 +17,17 @@ export default function VerifyEmail() {
       setMessage('Invalid verification link');
       return;
     }
+
     api.get<{ message: string }>(`/auth/verify/${token}`)
       .then(async res => {
         await refreshUser();
-        setStatus('success');
-        setMessage(res.message);
+        navigate('/verify-success', { replace: true });
       })
       .catch(err => {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Verification failed');
       });
-  }, [token, refreshUser]);
+  }, [token, refreshUser, navigate]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -44,9 +45,7 @@ export default function VerifyEmail() {
             </div>
             <h1 className="text-2xl font-bold uppercase tracking-tight">Email Verified</h1>
             <p className="text-gray-500 text-sm">{message}</p>
-            <Link to="/dashboard" className="inline-block bg-black text-white px-8 py-3 text-xs uppercase tracking-wider font-bold hover:bg-zinc-900 transition-colors">
-              Go to Dashboard
-            </Link>
+            <p className="text-xs text-gray-400">Redirecting to verification success page...</p>
           </div>
         )}
         {status === 'error' && (
@@ -56,9 +55,6 @@ export default function VerifyEmail() {
             </div>
             <h1 className="text-2xl font-bold uppercase tracking-tight">Verification Failed</h1>
             <p className="text-gray-500 text-sm">{message}</p>
-            <Link to="/" className="inline-block bg-black text-white px-8 py-3 text-xs uppercase tracking-wider font-bold hover:bg-zinc-900 transition-colors">
-              Back to Home
-            </Link>
           </div>
         )}
       </div>

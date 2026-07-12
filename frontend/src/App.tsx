@@ -14,12 +14,13 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import VerifyEmail from './pages/VerifyEmail';
+import VerifySuccess from './pages/VerifySuccess';
 import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/admin/Dashboard';
-import AdminUsers from './pages/admin/Users';
 import AdminOrders from './pages/admin/Orders';
 import AdminProducts from './pages/admin/Products';
 import AdminCategories from './pages/admin/Categories';
+import AdminUsers from './pages/admin/Users';
 import AdminLayout from './components/admin/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/forgot-password" element={<MainLayout><ForgotPassword /></MainLayout>} />
             <Route path="/reset-password/:token" element={<MainLayout><ResetPassword /></MainLayout>} />
             <Route path="/verify-email/:token" element={<MainLayout><VerifyEmail /></MainLayout>} />
+            <Route path="/verify-success" element={<MainLayout><VerifySuccess /></MainLayout>} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
