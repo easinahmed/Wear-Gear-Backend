@@ -57,6 +57,7 @@ export default function App() {
             <Route path="/register" element={<MainLayout><Register /></MainLayout>} />
             <Route path="/forgot-password" element={<MainLayout><ForgotPassword /></MainLayout>} />
             <Route path="/reset-password/:token" element={<MainLayout><ResetPassword /></MainLayout>} />
+            <Route path="/verify-email/:token" element={<MainLayout><VerifyEmail /></MainLayout>} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
@@ -65,20 +66,13 @@ export default function App() {
               <Route path="users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
             </Route>
-            <Route path="*" element={
-              <MainLayout>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/shop" element={<Shop />} />
-                  <Route path="/product/:id" element={<ProductDetail />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<ProtectedRoute redirectAdminTo="/admin/dashboard"><Checkout /></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute redirectAdminTo="/admin/dashboard"><Dashboard /></ProtectedRoute>} />
-                  <Route path="/verify-email/:token" element={<VerifyEmail />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </MainLayout>
-            } />
+            <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+            <Route path="/shop" element={<MainLayout><Shop /></MainLayout>} />
+            <Route path="/product/:id" element={<MainLayout><ProductDetail /></MainLayout>} />
+            <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
+            <Route path="/checkout" element={<MainLayout><ProtectedRoute redirectAdminTo="/admin/dashboard"><Checkout /></ProtectedRoute></MainLayout>} />
+            <Route path="/dashboard" element={<MainLayout><ProtectedRoute redirectAdminTo="/admin/dashboard"><Dashboard /></ProtectedRoute></MainLayout>} />
+            <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
           </Routes>
         </Router>
       </CartProvider>

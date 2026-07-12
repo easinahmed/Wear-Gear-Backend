@@ -24,6 +24,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<User | null>;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -44,11 +45,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const userData = await api.get<User>('/auth/me');
       setUser(userData);
+      return userData;
     } catch {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setToken(null);
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -80,6 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({ _id: data._id, name: data.name, email: data.email, role: data.role, isVerified: data.isVerified });
   };
 
+  const refreshUser = async () => {
+    return await fetchUser();
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -91,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, isAuthenticated, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

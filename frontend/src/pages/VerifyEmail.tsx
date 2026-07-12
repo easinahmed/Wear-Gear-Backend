@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { Check, X, Loader } from 'lucide-react';
 
 export default function VerifyEmail() {
   const { token } = useParams();
+  const { refreshUser } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
@@ -15,7 +17,8 @@ export default function VerifyEmail() {
       return;
     }
     api.get<{ message: string }>(`/auth/verify/${token}`)
-      .then(res => {
+      .then(async res => {
+        await refreshUser();
         setStatus('success');
         setMessage(res.message);
       })
@@ -23,7 +26,7 @@ export default function VerifyEmail() {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Verification failed');
       });
-  }, [token]);
+  }, [token, refreshUser]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">

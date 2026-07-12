@@ -116,6 +116,7 @@ const login = async (req, res) => {
       isVerified: user.isVerified,
       phone: user.phone,
       address: user.address,
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -133,6 +134,7 @@ const getMe = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      isVerified: user.isVerified,
       phone: user.phone,
       address: user.address,
     });
