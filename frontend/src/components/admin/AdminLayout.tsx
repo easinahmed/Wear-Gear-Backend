@@ -1,5 +1,5 @@
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Package, Grid3X3, Users, ShoppingBag, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, Grid3X3, Users, ShoppingBag, BarChart3, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
 
@@ -9,6 +9,7 @@ const navItems = [
   { name: 'Categories', path: '/admin/categories', icon: Grid3X3 },
   { name: 'Orders', path: '/admin/orders', icon: ShoppingBag },
   { name: 'Customers', path: '/admin/users', icon: Users },
+  { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
 ];
 
 export default function AdminLayout() {

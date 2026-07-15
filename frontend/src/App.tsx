@@ -21,6 +21,7 @@ import AdminOrders from './pages/admin/Orders';
 import AdminProducts from './pages/admin/Products';
 import AdminCategories from './pages/admin/Categories';
 import AdminUsers from './pages/admin/Users';
+import AdminAnalytics from './pages/admin/Analytics';
 import AdminLayout from './components/admin/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -67,6 +68,7 @@ export default function App() {
               <Route path="categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
               <Route path="users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+              <Route path="analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
             </Route>
             <Route path="/" element={<MainLayout><Home /></MainLayout>} />
             <Route path="/shop" element={<MainLayout><Shop /></MainLayout>} />

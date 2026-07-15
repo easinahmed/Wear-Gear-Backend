@@ -73,4 +73,95 @@ const updateUserRole = async (req, res) => {
   }
 };
 
-module.exports = { getDashboardStats, getUsers, updateUserRole };
+const getAnalytics = async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+    const [
+      revenueByDay,
+      ordersByDay,
+      ordersByStatus,
+      productsByCategory,
+      topProducts,
+      newUsersByDay,
+      totalRevenueResult,
+    ] = await Promise.all([
+      Order.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo }, status: { $nin: ['cancelled'] } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            revenue: { $sum: '$totalAmount' },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
+      Product.aggregate([
+        { $group: { _id: '$category', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
+      Order.aggregate([
+        { $unwind: '$items' },
+        {
+          $group: {
+            _id: '$items.product',
+            name: { $first: '$items.name' },
+            totalQuantity: { $sum: '$items.quantity' },
+            totalRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+          },
+        },
+        { $sort: { totalQuantity: -1 } },
+        { $limit: 10 },
+      ]),
+      User.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo }, role: 'user' } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([
+        { $match: { status: { $nin: ['cancelled'] } } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      ]),
+    ]);
+
+    const totalRevenue = totalRevenueResult.length > 0 ? totalRevenueResult[0].total : 0;
+    const totalOrders = ordersByStatus.reduce((sum, s) => sum + s.count, 0);
+    const totalProducts = await Product.countDocuments();
+    const totalUsers = await User.countDocuments({ role: 'user' });
+
+    res.json({
+      summary: { totalRevenue, totalOrders, totalProducts, totalUsers },
+      revenueByDay,
+      ordersByDay,
+      ordersByStatus,
+      productsByCategory,
+      topProducts,
+      newUsersByDay,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { getDashboardStats, getUsers, updateUserRole, getAnalytics };
