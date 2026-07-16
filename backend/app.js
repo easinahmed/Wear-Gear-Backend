@@ -16,7 +16,7 @@ const app = express();
 
 app.use(cors(
   {
-    origin: [process.env.CLIENT_URL, 'http://localhost:3000', 'https://gadgetgear-three.vercel.app/'].filter(Boolean),
+    origin: process.env.CLIENT_URL,
     credentials: true
   }
 ));
